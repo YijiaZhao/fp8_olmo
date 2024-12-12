@@ -1,10 +1,10 @@
-# env
+# Env
 
 trt-llm based on b171e87
 
 modelopt version：0.19.0
 
-# cmd:
+# Cmd:
 
 FP16:
 ```
@@ -16,7 +16,7 @@ nsys profile -o fp16_olmo ../../cpp/build/benchmarks/gptSessionBenchmark --engin
 
 python ../mmlu.py --test_trt_llm --engine_dir ./fp16_engine/ --tokenizer_dir /root/.cache/huggingface/hub/models--amd--AMD-OLMo-1B-SFT/snapshots/4c54fc6babb00e7e71a724e13ec9b3ec6f08266e/  --data_dir /fp8_allreduce/data/data/
 ```
-Average mmlu accuracy: 0.285
+Average mmlu accuracy: 0.293
 
 
 FP8:
@@ -35,3 +35,10 @@ nsys profile -o fp8_olmo ../../cpp/build/benchmarks/gptSessionBenchmark --engine
 python ../mmlu.py --test_trt_llm --engine_dir ./fp8_engine/ --tokenizer_dir /root/.cache/huggingface/hub/models--amd--AMD-OLMo-1B-SFT/snapshots/4c54fc6babb00e7e71a724e13ec9b3ec6f08266e/  --data_dir /fp8_allreduce/data/data/
 ```
 Average mmlu accuracy: 0.285
+
+# Performance
+input1024 ouput8 bs8
+
+context phase: 1.6x speed up
+
+generation phase: 1.4x speed up
