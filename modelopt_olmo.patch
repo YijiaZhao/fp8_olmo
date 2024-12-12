@@ -1,0 +1,99 @@
+diff --git a/torch/export/layer_utils.py b/torch/export/layer_utils.py
+index 2f996fd..b4432a9 100644
+--- a/torch/export/layer_utils.py
++++ b/torch/export/layer_utils.py
+@@ -226,41 +226,52 @@ def build_layernorm_config(module: nn.Module, dtype: torch.dtype) -> LayernormCo
+     layernorm_type = LAYERNORM_DEFAULT
+     if "RMS" in type(module).__name__:
+         layernorm_type = LAYERNORM_RMS
++    
++    import transformers
++    if isinstance(module, transformers.models.olmo.modeling_olmo.OlmoLayerNorm):
++        weight = None
++        
++        config = LayernormConfig(
++            layernorm_type=layernorm_type,
++            quantization=get_quantization_format(module),
++        )
++        config.eps = 1e-5
++                
++    else:
++        weight = module.weight.detach()
+ 
+-    weight = module.weight.detach()
+-
+-    def _weights_plus_one(module):
+-        if any(
+-            name in type(module).__name__
+-            for name in ["LayerNorm1P", "GemmaRMSNorm", "Gemma2RMSNorm"]
+-        ):
+-            return True
++        def _weights_plus_one(module):
++            if any(
++                name in type(module).__name__
++                for name in ["LayerNorm1P", "GemmaRMSNorm", "Gemma2RMSNorm"]
++            ):
++                return True
+ 
+-        if hasattr(module, "zero_centered_gamma") and module.zero_centered_gamma:
+-            return True
++            if hasattr(module, "zero_centered_gamma") and module.zero_centered_gamma:
++                return True
+ 
+-        return False
++            return False
+ 
+-    if _weights_plus_one(module):
+-        # megatron layernorm's weight needs to be updated.
+-        weight = weight.float() + 1.0
+-
+-    config = LayernormConfig(
+-        weight=weight.type(dtype),
+-        bias=(
+-            module.bias.detach().type(dtype)
+-            if hasattr(module, "bias") and module.bias is not None
+-            else None
+-        ),
+-        layernorm_type=layernorm_type,
+-        quantization=get_quantization_format(module),
+-    )
++        if _weights_plus_one(module):
++            # megatron layernorm's weight needs to be updated.
++            weight = weight.float() + 1.0
++
++        config = LayernormConfig(
++            weight=weight.type(dtype),
++            bias=(
++                module.bias.detach().type(dtype)
++                if hasattr(module, "bias") and module.bias is not None
++                else None
++            ),
++            layernorm_type=layernorm_type,
++            quantization=get_quantization_format(module),
++        )
+ 
+-    # TODO: handle the nemo llama eps config.
+-    for eps_key in ["eps", "variance_epsilon"]:
+-        if hasattr(module, eps_key):
+-            config.eps = getattr(module, eps_key)
+-            break
++        # TODO: handle the nemo llama eps config.
++        for eps_key in ["eps", "variance_epsilon"]:
++            if hasattr(module, eps_key):
++                config.eps = getattr(module, eps_key)
++                break
+ 
+     return config
+ 
+diff --git a/torch/export/tensorrt_llm_utils.py b/torch/export/tensorrt_llm_utils.py
+index 8fd2bc9..d41c57e 100644
+--- a/torch/export/tensorrt_llm_utils.py
++++ b/torch/export/tensorrt_llm_utils.py
+@@ -60,6 +60,7 @@ MODEL_NAME_TO_HF_ARCH_MAP = {
+     "internlm": "InternLM2ForCausalLM",
+     "exaone": "ExaoneForCausalLM",
+     "deci": "DeciLMForCausalLM",
++    "olmo": "OlmoForCausalLM",
+ }
+ 
+ 
