@@ -1,6 +1,6 @@
 # Env
 
-trt-llm based on b171e87
+trt-llm based on b171e87 (https://github.com/NVIDIA/TensorRT-LLM.git)
 
 modelopt version：0.19.0
 
