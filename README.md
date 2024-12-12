@@ -36,7 +36,7 @@ python ../mmlu.py --test_trt_llm --engine_dir ./fp8_engine/ --tokenizer_dir /roo
 ```
 Average mmlu accuracy: 0.285
 
-# Performance
+# Performance fp8 vs fp16
 input1024 ouput8 bs8
 
 context phase: 1.6x speed up
